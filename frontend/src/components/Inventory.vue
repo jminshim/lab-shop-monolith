@@ -36,7 +36,7 @@
                     @click="save"
                     v-else
             >
-                Save
+                AddProduct
             </v-btn>
             <v-btn
                     color="deep-purple lighten-2"
@@ -56,7 +56,21 @@
             </v-btn>
         </v-card-actions>
         <v-card-actions>
-            <v-spacer></v-spacer>                        
+            <v-spacer></v-spacer>
+            <v-btn
+                    v-if="!editMode"
+                    color="deep-purple lighten-2"
+                    text
+                    @click="openDecreasestock"
+            >
+                Decreasestock
+            </v-btn>
+            <v-dialog v-model="decreasestockDiagram" width="500">
+                <DecreasestockCommand
+                        @closeDialog="closeDecreasestock"
+                        @decreasestock="decreasestock"
+                ></DecreasestockCommand>
+            </v-dialog>
         </v-card-actions>
 
         <v-snackbar
@@ -94,8 +108,9 @@
                 timeout: 5000,
                 text: ''
             },
+            decreasestockDiagram: false,
         }),
-        created(){
+        computed:{
         },
         methods: {
             selectFile(){
@@ -156,7 +171,7 @@
 
                 } catch(e) {
                     this.snackbar.status = true
-                    if(e.response.data.message) {
+                    if(e.response && e.response.data.message) {
                         this.snackbar.text = e.response.data.message
                     } else {
                         this.snackbar.text = e
@@ -178,7 +193,7 @@
 
                 } catch(e) {
                     this.snackbar.status = true
-                    if(e.response.data.message) {
+                    if(e.response && e.response.data.message) {
                         this.snackbar.text = e.response.data.message
                     } else {
                         this.snackbar.text = e
@@ -187,6 +202,32 @@
             },
             change(){
                 this.$emit('input', this.value);
+            },
+            async decreasestock(params) {
+                try {
+                    if(!this.offline) {
+                        var temp = await axios.put(axios.fixUrl(this.value._links['decreasestock'].href), params)
+                        for(var k in temp.data) {
+                            this.value[k]=temp.data[k];
+                        }
+                    }
+
+                    this.editMode = false;
+                    this.closeDecreasestock();
+                } catch(e) {
+                    this.snackbar.status = true
+                    if(e.response && e.response.data.message) {
+                        this.snackbar.text = e.response.data.message
+                    } else {
+                        this.snackbar.text = e
+                    }
+                }
+            },
+            openDecreasestock() {
+                this.decreasestockDiagram = true;
+            },
+            closeDecreasestock() {
+                this.decreasestockDiagram = false;
             },
         },
     }
